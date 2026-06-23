@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', sans-serif;
+  --font-display: 'Space Grotesk', sans-serif;
+  --color-brand: #c47a2a;
+  --color-brand-light: #d4943e;
+  --color-brand-dark: #a0621e;
+  --color-brand-glow: rgba(196, 122, 42, 0.15);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(196, 122, 42, 0.15) transparent;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: #0f0b07;
+  color: #c8b9a8;
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  margin: 0;
+}
+
+.glass {
+  background: rgba(30, 22, 14, 0.85);
+  backdrop-filter: blur(24px);
+  border-bottom: 1px solid rgba(196, 122, 42, 0.08);
+}
+
+.glass-card {
+  background: rgba(196, 122, 42, 0.04);
+  border: 1px solid rgba(196, 122, 42, 0.08);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  background: rgba(196, 122, 42, 0.08);
+  border-color: rgba(196, 122, 42, 0.18);
+}
+
+.slide-in-right {
+  animation: slideInRight 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-up {
+  animation: fadeUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 0;
+}
+
