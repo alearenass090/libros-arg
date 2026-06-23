@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { ChevronLeft, ChevronRight, ShoppingCart, Check } from "lucide-react";
 import type { Book } from "../types";
 import { useCart } from "../context/CartContext";
@@ -64,7 +64,45 @@ export function Carousel({ title, books, onSelectBook }: CarouselProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
   const startX = useRef(0);
-  const scrollLeft = useRef(0);
+  const scrollLeftRef = useRef(0);
+
+  const looped = useMemo(() => [...books, ...books, ...books], [books]);
+
+  const getSetWidth = useCallback(() => {
+    if (!scrollRef.current || books.length === 0) return 0;
+    const child = scrollRef.current.children[0] as HTMLElement | undefined;
+    if (!child) return 0;
+    const gap = 16;
+    return (child.offsetWidth + gap) * books.length;
+  }, [books.length]);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    requestAnimationFrame(() => {
+      const setW = getSetWidth();
+      if (setW > 0) el.scrollLeft = setW;
+    });
+  }, [getSetWidth]);
+
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el || isDragging.current) return;
+    const setW = getSetWidth();
+    if (setW === 0) return;
+    if (el.scrollLeft < setW * 0.3) {
+      el.scrollLeft += setW;
+    } else if (el.scrollLeft > setW * 1.7) {
+      el.scrollLeft -= setW;
+    }
+  }, [getSetWidth]);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.addEventListener("scroll", handleScroll, { passive: true });
+    return () => el.removeEventListener("scroll", handleScroll);
+  }, [handleScroll]);
 
   const scroll = (dir: number) => {
     if (!scrollRef.current) return;
@@ -75,7 +113,7 @@ export function Carousel({ title, books, onSelectBook }: CarouselProps) {
     if (!scrollRef.current) return;
     isDragging.current = true;
     startX.current = e.pageX - scrollRef.current.offsetLeft;
-    scrollLeft.current = scrollRef.current.scrollLeft;
+    scrollLeftRef.current = scrollRef.current.scrollLeft;
     scrollRef.current.style.cursor = "grabbing";
   };
 
@@ -84,12 +122,15 @@ export function Carousel({ title, books, onSelectBook }: CarouselProps) {
     e.preventDefault();
     const x = e.pageX - scrollRef.current.offsetLeft;
     const walk = (x - startX.current) * 1.5;
-    scrollRef.current.scrollLeft = scrollLeft.current - walk;
+    scrollRef.current.scrollLeft = scrollLeftRef.current - walk;
   };
 
   const handleMouseUp = () => {
-    isDragging.current = false;
-    if (scrollRef.current) scrollRef.current.style.cursor = "grab";
+    if (isDragging.current) {
+      isDragging.current = false;
+      if (scrollRef.current) scrollRef.current.style.cursor = "grab";
+      handleScroll();
+    }
   };
 
   if (books.length === 0) return null;
@@ -123,8 +164,8 @@ export function Carousel({ title, books, onSelectBook }: CarouselProps) {
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
       >
-        {books.map((book) => (
-          <CarouselCard key={book.id} book={book} onSelect={onSelectBook} />
+        {looped.map((book, i) => (
+          <CarouselCard key={`${book.id}-${i}`} book={book} onSelect={onSelectBook} />
         ))}
       </div>
     </div>
