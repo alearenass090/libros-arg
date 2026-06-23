@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, ShoppingCart, Check } from "lucide-react";
 import type { Book } from "../types";
 import { useCart } from "../context/CartContext";
+import { BookCover } from "./BookCover";
 
 interface CarouselProps {
   title: string;
@@ -27,12 +28,7 @@ function CarouselCard({ book, onSelect }: { book: Book; onSelect: (book: Book) =
       onClick={() => onSelect(book)}
     >
       <div className="relative rounded-xl overflow-hidden mb-3">
-        <img
-          src={book.thumbnailLarge}
-          alt={book.title}
-          className="w-full aspect-[2/3] object-cover transition-transform duration-500 group-hover:scale-105"
-          draggable={false}
-        />
+        <BookCover src={book.thumbnail} alt={book.title} className="aspect-[2/3] rounded-xl" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
         <button

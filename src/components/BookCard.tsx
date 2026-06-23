@@ -2,6 +2,7 @@ import { Plus, Check } from "lucide-react";
 import { useState } from "react";
 import type { Book } from "../types";
 import { useCart } from "../context/CartContext";
+import { BookCover } from "./BookCover";
 
 interface BookCardProps {
   book: Book;
@@ -20,15 +21,12 @@ export function BookCard({ book, onSelect }: BookCardProps) {
     setTimeout(() => setJustAdded(false), 1200);
   };
 
+  const smallThumb = book.thumbnail.replace("-M.jpg", "-S.jpg");
+
   return (
     <div className="group cursor-pointer" onClick={() => onSelect(book)}>
-      <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-stone-900/50 mb-3">
-        <img
-          src={book.thumbnail}
-          alt={book.title}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-          loading="lazy"
-        />
+      <div className="relative aspect-[2/3] rounded-lg overflow-hidden mb-3">
+        <BookCover src={smallThumb} alt={book.title} className="aspect-[2/3] rounded-lg" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
         <button
