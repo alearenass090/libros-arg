@@ -104,7 +104,7 @@ export function Carousel({ title, books, onSelectBook }: CarouselProps) {
   const [paused, setPaused] = useState(false);
   const touchStart = useRef(0);
   const touchEnd = useRef(0);
-  const intervalRef = useRef<ReturnType<typeof setInterval>>();
+  const intervalRef = useRef<ReturnType<typeof setInterval>>(undefined);
 
   const total = books.length;
 
