@@ -19,7 +19,7 @@ export function Footer() {
           {new Date().getFullYear()} Libros Rivendell
         </span>
 
-        <div className="flex items-center gap-5">
+        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-5">
           <a
             href={`https://wa.me/${WHATSAPP_NUMBER}`}
             target="_blank"

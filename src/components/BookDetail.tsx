@@ -117,7 +117,7 @@ export function BookDetail({ book, onClose }: BookDetailProps) {
 
               <div className="mb-6">
                 <h3 className="text-[12px] uppercase tracking-wider text-stone-600 mb-2">Formatos disponibles</h3>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {FORMATS.map((fmt) => (
                     <div key={fmt.name} className="flex items-center gap-2 px-3 py-2 bg-amber-900/5 border border-amber-900/8 rounded-lg">
                       <FileText className="w-3.5 h-3.5 text-stone-500 flex-shrink-0" />

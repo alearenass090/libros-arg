@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, ShoppingCart, Check } from "lucide-react";
 import type { Book } from "../types";
 import { useCart } from "../context/CartContext";
@@ -9,15 +9,7 @@ interface CarouselProps {
   onSelectBook: (book: Book) => void;
 }
 
-function CarouselCard({
-  book,
-  position,
-  onSelect,
-}: {
-  book: Book;
-  position: "left" | "center" | "right" | "hidden";
-  onSelect: (book: Book) => void;
-}) {
+function CarouselCard({ book, onSelect }: { book: Book; onSelect: (book: Book) => void }) {
   const { addToCart, items } = useCart();
   const [justAdded, setJustAdded] = useState(false);
   const inCart = items.some((item) => item.book.id === book.id);
@@ -29,174 +21,115 @@ function CarouselCard({
     setTimeout(() => setJustAdded(false), 1200);
   };
 
-  const styles: Record<string, string> = {
-    center: "z-20 scale-100 opacity-100 translate-x-0",
-    left: "z-10 scale-[0.85] opacity-60 -translate-x-[70%] md:-translate-x-[85%]",
-    right: "z-10 scale-[0.85] opacity-60 translate-x-[70%] md:translate-x-[85%]",
-    hidden: "z-0 scale-75 opacity-0 translate-x-0",
-  };
-
   return (
     <div
-      className={`absolute left-1/2 -ml-[140px] md:-ml-[160px] w-[280px] md:w-[320px] transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] cursor-pointer ${styles[position]}`}
-      onClick={() => position === "center" && onSelect(book)}
+      className="flex-shrink-0 w-[200px] sm:w-[220px] md:w-[240px] cursor-pointer group"
+      onClick={() => onSelect(book)}
     >
-      <div
-        className={`rounded-2xl overflow-hidden transition-shadow duration-700 ${
-          position === "center"
-            ? "shadow-[0_20px_60px_-10px_rgba(196,122,42,0.25)]"
-            : "shadow-lg"
-        }`}
-      >
-        <div className="relative">
-          <img
-            src={book.thumbnailLarge}
-            alt={book.title}
-            className="w-full aspect-[2/3] object-cover"
-            draggable={false}
-          />
+      <div className="relative rounded-xl overflow-hidden mb-3">
+        <img
+          src={book.thumbnailLarge}
+          alt={book.title}
+          className="w-full aspect-[2/3] object-cover transition-transform duration-500 group-hover:scale-105"
+          draggable={false}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-          <div
-            className={`absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent transition-opacity duration-500 ${
-              position === "center" ? "opacity-100" : "opacity-0"
-            }`}
-          />
-
-          {position === "center" && (
-            <div className="absolute bottom-0 left-0 right-0 p-5">
-              <h3 className="text-[16px] font-semibold text-white leading-snug mb-1 drop-shadow-lg line-clamp-2">
-                {book.title}
-              </h3>
-              <p className="text-[13px] text-white/70 mb-3 line-clamp-1">
-                {book.authors.join(", ")}
-              </p>
-              <div className="flex items-center justify-between">
-                <span className="text-[18px] font-bold text-amber-400">
-                  ${book.price.toLocaleString("es-AR")}
-                </span>
-                <button
-                  onClick={handleAdd}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all cursor-pointer ${
-                    justAdded
-                      ? "bg-emerald-500/90 text-white"
-                      : inCart
-                      ? "bg-amber-700/80 text-amber-50 hover:bg-amber-600/80"
-                      : "bg-white/15 text-white hover:bg-white/25 backdrop-blur-sm"
-                  }`}
-                >
-                  {justAdded ? (
-                    <><Check className="w-3.5 h-3.5" /> Agregado</>
-                  ) : (
-                    <><ShoppingCart className="w-3.5 h-3.5" /> {inCart ? "Otro más" : "Agregar"}</>
-                  )}
-                </button>
-              </div>
-            </div>
+        <button
+          onClick={handleAdd}
+          className={`absolute bottom-3 right-3 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all opacity-0 group-hover:opacity-100 cursor-pointer ${
+            justAdded
+              ? "bg-emerald-500/90 text-white"
+              : "bg-black/50 text-white hover:bg-amber-800/70 backdrop-blur-sm"
+          }`}
+        >
+          {justAdded ? (
+            <><Check className="w-3 h-3" /> Listo</>
+          ) : (
+            <><ShoppingCart className="w-3 h-3" /> {inCart ? "Otro" : "Agregar"}</>
           )}
-        </div>
+        </button>
       </div>
+
+      <h3 className="text-[13px] font-medium text-amber-100/80 leading-snug line-clamp-2 mb-0.5">
+        {book.title}
+      </h3>
+      <p className="text-[11px] text-stone-600 line-clamp-1 mb-1">
+        {book.authors.join(", ")}
+      </p>
+      <span className="text-[13px] font-semibold text-amber-600">
+        ${book.price.toLocaleString("es-AR")}
+      </span>
     </div>
   );
 }
 
 export function Carousel({ title, books, onSelectBook }: CarouselProps) {
-  const [current, setCurrent] = useState(0);
-  const [paused, setPaused] = useState(false);
-  const touchStart = useRef(0);
-  const touchEnd = useRef(0);
-  const intervalRef = useRef<ReturnType<typeof setInterval>>(undefined);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+  const startX = useRef(0);
+  const scrollLeft = useRef(0);
 
-  const total = books.length;
-
-  const prev = useCallback(() => {
-    setCurrent((c) => (c - 1 + total) % total);
-  }, [total]);
-
-  const next = useCallback(() => {
-    setCurrent((c) => (c + 1) % total);
-  }, [total]);
-
-  useEffect(() => {
-    if (paused || total <= 1) return;
-    intervalRef.current = setInterval(next, 4000);
-    return () => clearInterval(intervalRef.current);
-  }, [paused, next, total]);
-
-  const getPosition = (index: number): "left" | "center" | "right" | "hidden" => {
-    if (index === current) return "center";
-    if (index === (current - 1 + total) % total) return "left";
-    if (index === (current + 1) % total) return "right";
-    return "hidden";
+  const scroll = (dir: number) => {
+    if (!scrollRef.current) return;
+    scrollRef.current.scrollBy({ left: dir * 260, behavior: "smooth" });
   };
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStart.current = e.touches[0].clientX;
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!scrollRef.current) return;
+    isDragging.current = true;
+    startX.current = e.pageX - scrollRef.current.offsetLeft;
+    scrollLeft.current = scrollRef.current.scrollLeft;
+    scrollRef.current.style.cursor = "grabbing";
   };
 
-  const handleTouchMove = (e: React.TouchEvent) => {
-    touchEnd.current = e.touches[0].clientX;
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging.current || !scrollRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const walk = (x - startX.current) * 1.5;
+    scrollRef.current.scrollLeft = scrollLeft.current - walk;
   };
 
-  const handleTouchEnd = () => {
-    const diff = touchStart.current - touchEnd.current;
-    if (Math.abs(diff) > 50) {
-      if (diff > 0) next();
-      else prev();
-    }
+  const handleMouseUp = () => {
+    isDragging.current = false;
+    if (scrollRef.current) scrollRef.current.style.cursor = "grab";
   };
 
   if (books.length === 0) return null;
 
   return (
-    <div className="mb-20">
-      <h2 className="text-lg font-semibold text-amber-100/90 mb-8 px-6 max-w-6xl mx-auto">{title}</h2>
+    <div className="mb-14">
+      <div className="max-w-6xl mx-auto px-6 flex items-center justify-between mb-5">
+        <h2 className="text-lg font-semibold text-amber-100/90">{title}</h2>
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => scroll(-1)}
+            className="w-8 h-8 rounded-full bg-amber-900/10 flex items-center justify-center hover:bg-amber-900/25 transition-colors cursor-pointer"
+          >
+            <ChevronLeft className="w-4 h-4 text-stone-400" />
+          </button>
+          <button
+            onClick={() => scroll(1)}
+            className="w-8 h-8 rounded-full bg-amber-900/10 flex items-center justify-center hover:bg-amber-900/25 transition-colors cursor-pointer"
+          >
+            <ChevronRight className="w-4 h-4 text-stone-400" />
+          </button>
+        </div>
+      </div>
 
       <div
-        className="relative h-[420px] md:h-[480px] select-none"
-        onMouseEnter={() => setPaused(true)}
-        onMouseLeave={() => setPaused(false)}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
+        ref={scrollRef}
+        className="flex gap-4 overflow-x-auto px-6 md:px-[calc((100vw-72rem)/2+1.5rem)] cursor-grab select-none"
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
       >
-        <div className="absolute inset-0 flex items-center justify-center">
-          {books.map((book, i) => (
-            <CarouselCard
-              key={book.id}
-              book={book}
-              position={getPosition(i)}
-              onSelect={onSelectBook}
-            />
-          ))}
-        </div>
-
-        <button
-          onClick={prev}
-          className="absolute left-4 md:left-12 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center hover:bg-amber-900/40 transition-colors cursor-pointer"
-        >
-          <ChevronLeft className="w-5 h-5 text-amber-200/80" />
-        </button>
-
-        <button
-          onClick={next}
-          className="absolute right-4 md:right-12 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center hover:bg-amber-900/40 transition-colors cursor-pointer"
-        >
-          <ChevronRight className="w-5 h-5 text-amber-200/80" />
-        </button>
-
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2">
-          {books.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setCurrent(i)}
-              className={`rounded-full transition-all duration-500 cursor-pointer ${
-                i === current
-                  ? "w-6 h-2 bg-amber-600"
-                  : "w-2 h-2 bg-amber-800/30 hover:bg-amber-700/40"
-              }`}
-            />
-          ))}
-        </div>
+        {books.map((book) => (
+          <CarouselCard key={book.id} book={book} onSelect={onSelectBook} />
+        ))}
       </div>
     </div>
   );
